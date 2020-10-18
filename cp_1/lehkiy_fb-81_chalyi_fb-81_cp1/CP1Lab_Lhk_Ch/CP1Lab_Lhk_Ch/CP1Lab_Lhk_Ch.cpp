@@ -6,11 +6,11 @@
 #include <fstream>
 #include <iomanip>
 #include <cmath>
-#include <map>
+
 
 using namespace std;
 
-void remove_symbols(char* ftext, char* wtext);
+void remove_symbols(char* ftext, char* wtext,int mode);
 void count_freq_monogr(char* wtext, float* cont, int mode);
 void count_freq_bigr(char* wtext, float** cont, float** cont2, int mode);
 float entrophy_for_monogr(float* cont);
@@ -19,10 +19,12 @@ float entrophy_for_bigr(float** cont);
 
 int main()
 {
-	setlocale(LC_ALL, "rus");
+	setlocale(LC_ALL, "");
 
 	char *filetext = new char[10000000];
 	char *worktext = new char[10000000];
+	char *worktext_without_spaces = new char[10000000];
+	char *worktext_step1 = new char[10000000];
 	float *freq_mono = new float[32];
 	float **freq_bi_cross = new float*[32];
 	float **freq_bi = new float*[32];
@@ -46,7 +48,8 @@ int main()
 
 	fin.read(filetext, 10000000);
 	fin.close();
-	remove_symbols(filetext, worktext);
+	remove_symbols(filetext, worktext,0);
+	remove_symbols(filetext, worktext_without_spaces, 1);
 	count_freq_monogr(worktext, freq_mono, 1);
 	count_freq_bigr(worktext, freq_bi_cross, freq_bi ,1);
 	ofstream fout1("monograms_with_spaces.txt");
@@ -94,7 +97,7 @@ int main()
 	{
 		for (int j = 0; j < 32; j++)
 		{
-			if (freq_bi[k][j] != 0) {
+			//if (freq_bi[k][j] != 0) {
 				if ((char)('а' + k) == 'ъ')
 					fout5 << ' ';
 				else
@@ -107,7 +110,7 @@ int main()
 				else {
 					fout5 << (char)('а' + j) << '=';
 					fout5 << freq_bi[k][j] << endl;
-				}
+				//}
 			}
 		}
 	}
@@ -115,8 +118,9 @@ int main()
 	float entr1 = entrophy_for_monogr(freq_mono);
 	float entr2 = entrophy_for_bigr(freq_bi_cross);
 	float entr5 = entrophy_for_bigr(freq_bi);
-	count_freq_monogr(worktext, freq_mono, 0);
-	count_freq_bigr(worktext, freq_bi_cross, freq_bi, 0);
+
+	count_freq_monogr(worktext_without_spaces, freq_mono, 0);
+	count_freq_bigr(worktext_without_spaces, freq_bi_cross, freq_bi, 0);
 	ofstream fout3("monograms_without_spaces.txt");
 	for (int i = 0; i < 32; i++)
 	{
@@ -162,7 +166,7 @@ int main()
 	{
 		for (int j = 0; j < 32; j++)
 		{
-			if (freq_bi[k][j] != 0) {
+			//if (freq_bi[k][j] != 0) {
 				if ((char)('а' + k) == 'ъ')
 					fout6 << ' ';
 				else
@@ -176,7 +180,7 @@ int main()
 					fout6 << (char)('а' + j) << '=';
 					fout6 << freq_bi[k][j] << endl;
 				}
-			}
+			//}
 		}
 	}
 	fout6.close();
@@ -191,14 +195,18 @@ int main()
 	fout7 << "H2 сплошная без пробелов  = " << entr4 << endl;
 	fout7 << "H2 с шагом без пробелов  = " << entr6 << endl;
 	fout7.close();
+	int a = 0;
+	
+	
 }
 
-void remove_symbols(char* ftext, char* wtext)
-{
+void remove_symbols(char* ftext, char* wtext, int mode)
+{ 
 	int64_t i = 0;
 	int64_t j = 0;
-	while (ftext[i] != 'Z')
-	{
+	
+	
+	while (ftext[i] != 'Z' ){
 		if (ftext[i] == 'ё') ftext[i] = 'е';
 		if (ftext[i] == 'ъ') ftext[i] = 'ь';
 		if (ftext[i] >= 'а' && ftext[i] <= 'я')
@@ -206,12 +214,15 @@ void remove_symbols(char* ftext, char* wtext)
 
 		else if (ftext[i] >= 'А' && ftext[i] <= 'Я')
 			wtext[j++] = ftext[i] + 32;
-
-		else if ((ftext[i] == ' ' || ftext[i] == '\t' || ftext[i] == '\n' || ftext[i] == '\v') && wtext[j - 1] != ' ')
+		else if (mode == 0) {
+		 if ((ftext[i] == ' ' || ftext[i] == '\t' || ftext[i] == '\n' ) && wtext[j - 1] != ' ')
 			wtext[j++] = ' ';
+		}
 		i++;
 	}
-	wtext[j] = '\0';
+	wtext[j] = 'Z';
+	
+	
 }
 
 void count_freq_monogr(char* wtext, float* cont, int mode) {
@@ -221,7 +232,7 @@ void count_freq_monogr(char* wtext, float* cont, int mode) {
 	}
 	int i = 0;
 	int text_size = 0;
-	while (wtext[i] != '\0')
+	while (wtext[i] != 'Z')
 	{
 		if (mode == 1) {
 			if (wtext[i] == ' ') cont[26] += 1.0;
@@ -247,11 +258,12 @@ void count_freq_bigr(char* wtext, float** cont, float** cont2, int mode) {
 		for (int b = 0; b < 32; b++)
 		{
 			cont[y][b] = 0.0;
+			cont2[y][b] = 0.0;
 		}
 	}
 	int i = 0;
 	int text_size = 0;
-	while (wtext[i + 1] != '\0')
+	while (wtext[i + 1] != 'Z')
 	{
 		if (mode == 1) {
 			if (wtext[i] == ' ') cont[26][(int)wtext[i + 1] + 32] += 1.0;
@@ -267,32 +279,30 @@ void count_freq_bigr(char* wtext, float** cont, float** cont2, int mode) {
 		}
 		i++;
 	}
-	int z = 0;
+	int z = 2;
 	int text_size2 = 0;
-	while (wtext[z + 2] != '\0')
+	while (wtext[z] != 'Z')
 	{
 		if (mode == 1) {
-			if (wtext[z] == ' ') cont2[26][(int)wtext[z + 2] + 32] += 1.0;
-			else if (wtext[z + 2] == ' ') cont2[(int)wtext[z] + 32][26] += 1.0;
-			else  cont2[(int)wtext[z] + 32][(int)wtext[z + 2] + 32] += 1.0;
-
+			if(wtext[z-2] == ' ' && wtext[z] == ' ') cont2[26][26] += 1.0;
+			else if (wtext[z-2] == ' ') cont2[26][(int)wtext[z] + 32] += 1.0;
+			else if (wtext[z] == ' ') cont2[(int)wtext[z-2] + 32][26] += 1.0;
+			else  cont2[(int)wtext[z-2] + 32][(int)wtext[z] + 32] += 1.0;
 			text_size2++;
 		}
-		else if (wtext[z] != ' ')
-		{
-			cont2[(int)wtext[z] + 32][(int)wtext[z + 2] + 32] += 1.0;
-
+		else if (wtext[z] != ' ') {
+			cont2[(int)wtext[z-2] + 32][(int)wtext[z] + 32] += 1.0;
 			text_size2++;
-		}
+		}	
 		z++;
-
+		
 	}
 	for (int k = 0; k < 32; k++)
 	{
 		for (int j = 0; j < 32; j++)
 		{
-			cont[k][j] = cont[k][j] / text_size;
-			cont2[k][j] = cont2[k][j] / text_size2;
+			cont[k][j] = cont[k][j] / (float)text_size;
+			cont2[k][j] = cont2[k][j] / (float)text_size2;
 		}
 	}
 }

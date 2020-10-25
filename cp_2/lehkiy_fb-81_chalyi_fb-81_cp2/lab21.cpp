@@ -34,8 +34,7 @@ void viznr(const char *text, const int r, const int n)
 }
 int main()
 {
-	FILE* in;
-	in = fopen("input.txt", "r"); // Відкриваємо файл з потрібним для шифрування текстом
+	FILE* in = fopen("input.txt", "r"); // Відкриваємо файл з потрібним для шифрування текстом
 	int r = 0;
 	char c;
 	char* text = new char[50000000];

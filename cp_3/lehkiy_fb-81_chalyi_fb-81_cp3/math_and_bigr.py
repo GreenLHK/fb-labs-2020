@@ -1,8 +1,10 @@
+import math
+
 def gcd_Evkl(a,n,mode):  #функция для нахождения НСД(а,n) расширеным алгоритмом Эвклида
 
     r ={} #словарь для хранения ri
     q = {} # словарь для хранения qi
-    if (a < n): a,n=n,a #меняем местами для коректной работы алгоритма
+    #if (a < n): a,n=n,a #меняем местами для коректной работы алгоритма
     r[0]=a
     r[1]=n
     iter = 1 #итератор
@@ -20,7 +22,7 @@ def converse_a(a,n): #вычисляет обратный элемент для 
     gcd_result=gcd_Evkl(n,a,2)
     gcd=gcd_result[0]
     if (gcd!=1):
-        print('Невозможно найти значение, НСД не равен 1.')
+        #print('Невозможно найти значение, НСД не равен 1.')
         return None
     else:
      q=gcd_result[2]
@@ -35,21 +37,26 @@ def converse_a(a,n): #вычисляет обратный элемент для 
         u[iter+1] = u[iter-1]-q[iter]*u[iter]
         v[iter + 1] = v[iter - 1] - q[iter] * v[iter]
         iter+=1
-    return v[len(v)-1]
+    result =  v[len(v)-1]
+    if result<0: return n+result
+    else:return result
 
 def solve_lin_por(a,b,n): #розв`язуємо лінійне порівняння виду ax=b(mod n)
    d=gcd_Evkl(a,n,0)
    if (d==1): #одно решение
-       x = (converse_a(a, n) * b)%n
-       return x
+       if(converse_a(a, n)!=None):
+           x = (converse_a(a, n) * b)%n
+           return x%n
+       else:
+           return None
    elif gcd_Evkl(d,b,0)==1: #нет решений
        return None
-   else:#получаем d решений в массиве
+   elif d>1:#получаем d решений в массиве
        x0=solve_lin_por(a//d,b//d,n//d)
-       X= {}
+       X= []
        for i in range(0,d):
-          X[i]=x0+(n//d)*i
-       print(X)
+          x=x0+(n//d)*i
+          X.append(x)
        return X
 
 def clear_text(text,alf): #чистим текст от символов которых нет в заданом алфавите
@@ -65,13 +72,12 @@ def clear_text(text,alf): #чистим текст от символов кот�
 def count_bigr_freq(text,n): #выводит самых встречающихся биграм
    freq={}
    sum=0
-   for i in range(0,len(text)-1):
+   for i in range(0,len(text)-1,2):
        key=text[i]+text[i+1]
        if freq.get(key,-1)==-1:
            freq[key]=0
        freq[key]+=1
        sum+=1
-   print(freq)
 
    for key1 in freq:
        freq[key1]=freq[key1]/len(text)
@@ -83,12 +89,55 @@ def count_bigr_freq(text,n): #выводит самых встречающихс
            if value == maximum:
               n_max_keys.append(key)
               freq1[key]=0
-
-   for key in n_max_keys:
-       print(key+' '+str(freq[key]))
    return n_max_keys
 
+def count_mono_freq(text,n,mode): #выводит самых встречающихся биграм
+   freq={}
+   sum=0
+   for i in range(0,len(text)):
+       key=text[i]
+       if freq.get(key,-1)==-1:
+           freq[key]=0
+       freq[key]+=1
+       sum+=1
+
+
+   for key1 in freq:
+       freq[key1]=freq[key1]/len(text)
+   n_max_keys=[]
+   freq1=freq.copy()
+   for i in range(0,n):
+       if mode == 'min':
+          minimum = min(freq1.values())
+          for key, value in freq1.items():
+             if value == minimum:
+                 n_max_keys.append(key)
+                 freq1[key]=1
+       if mode == 'max':
+          maximum = max(freq1.values())
+          for key, value in freq1.items():
+             if value == maximum:
+                 n_max_keys.append(key)
+                 freq1[key]=0
+   return n_max_keys
+
+def entrophy(text):
+    freq = {}
+    sum = 0
+    for i in range(0, len(text)):
+        key = text[i]
+        if freq.get(key, -1) == -1:
+            freq[key] = 0
+        freq[key] += 1
+        sum += 1
+    for key1 in freq:
+        freq[key1] = freq[key1] / len(text)
+    entr=0
+    for key2 in freq:
+        entr=entr+freq[key2]*math.log2(freq[key2])
+    return -entr
+
 if __name__ == '__main__':
- #print(gcd_Evkl(2671234,132,2))
+ print(gcd_Evkl(132,2671234,2))
  print(converse_a(19,31))
  print(solve_lin_por(2,7,8))
